@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nighthawk CSA Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #121212;
+            color: #E0E0E0;
+        }
+
+        .calendar-container {
+            width: 90%; /* Maximum width for horizontal stretch */
+            max-width: 1400px; /* Max width for larger displays */
+            background-color: #1E1E1E;
+            border: 1px solid #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #4CAF50;
+            color: #E0E0E0;
+            font-size: 1.6rem;
+        }
+
+        .controls button {
+            background-color: #001F3F;
+            color: #4CAF50;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            border-radius: 4px;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            padding: 15px;
+            gap: 10px;
+        }
+
+        .day {
+            position: relative;
+            background-color: #282828;
+            border: 1px solid #444;
+            border-radius: 6px;
+            color: #E0E0E0;
+            cursor: pointer;
+            width: 100%; /* Ensure boxes take the full width of their grid cell */
+            height: 90px; /* Consistent height for all boxes */
+            display: flex; /* Flexbox for centering */
+            flex-direction: column; /* Column layout */
+            align-items: flex-start; /* Align items to the start */
+            justify-content: flex-start; /* Align items to the start */
+            padding: 10px; /* Padding for spacing */
+            box-sizing: border-box; /* Ensure padding is included in width */
+        }
+
+        .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #90CAF9;
+        }
+
+        /* Event Square */
+        .event-square {
+            width: 20px;
+            height: 20px;
+            background-color: #4CAF50;
+            color: #E0E0E0;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+
+        .day-header {
+            font-weight: bold;
+            color: #90CAF9;
+            background-color: #1E1E1E;
+        }
+
+        .empty {
+            background-color: transparent;
+            border: none;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .modal-content {
+            background: #333;
+            padding: 20px;
+            width: 300px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            color: #E0E0E0;
+        }
+
+        .modal-content label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 0.9rem;
+        }
+
+        .modal-content input,
+        .modal-content select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #282828;
+            color: #E0E0E0;
+        }
+
+        .modal-content button {
+            padding: 10px;
+            border: none;
+            background-color: #001F3F;
+            color: #4CAF50;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container">
+        <div class="header">
+            <button id="prevBtn" class="controls" onclick="changeMonth(-1)">&#10094;</button>
+            <div id="monthYear">Nighthawk CSA Calendar</div>
+            <button id="nextBtn" class="controls" onclick="changeMonth(1)">&#10095;</button>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+    </div>
+
+    <!-- Event Modal -->
+    <div class="modal" id="eventModal">
+        <div class="modal-content">
+            <h3>Add Event</h3>
+            <label for="eventType">Event Type</label>
+            <select id="eventType">
+                <option value="Lecture">Lecture</option>
+                <option value="Meeting">Meeting</option>
+                <option value="Workshop">Workshop</option>
+            </select>
+            <label for="lecturerName">Lecturer/Host Name</label>
+            <input type="text" id="lecturerName" placeholder="Enter name">
+            <label for="eventLink">Event Link</label>
+            <input type="url" id="eventLink" placeholder="Enter link">
+            <button onclick="saveEvent()">Save Event</button>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content" id="taskDetails">
+            <!-- Task details will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDay;
+
+        function updateCalendar() {
+            const monthYearElement = document.getElementById("monthYear");
+            const monthGrid = document.getElementById("monthGrid");
+            
+            monthYearElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+            monthGrid.innerHTML = "";
+
+            dayNames.forEach(day => {
+                const dayHeader = document.createElement("div");
+                dayHeader.classList.add("day", "day-header");
+                dayHeader.textContent = day;
+                monthGrid.appendChild(dayHeader);
+            });
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement("div");
+                emptyDay.classList.add("day", "empty");
+                monthGrid.appendChild(emptyDay);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement("div");
+                dayElement.classList.add("day");
+                dayElement.innerHTML = `<span class="day-number">${day}</span>`;
+                dayElement.onclick = () => openModal(dayElement);
+                monthGrid.appendChild(dayElement);
+            }
+        }
+
+        function openModal(dayElement) {
+            selectedDay = dayElement;
+            document.getElementById("eventModal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("eventModal").style.display = "none";
+            document.getElementById("taskModal").style.display = "none";
+        }
+
+        function saveEvent() {
+            const eventType = document.getElementById("eventType").value;
+            const lecturerName = document.getElementById("lecturerName").value;
+            const eventLink = document.getElementById("eventLink").value;
+
+            const eventSquare = document.createElement("div");
+            eventSquare.classList.add("event-square");
+            eventSquare.textContent = selectedDay.children.length;
+            eventSquare.onclick = (e) => showTaskDetails(eventType, lecturerName, eventLink);
+            
+            selectedDay.appendChild(eventSquare);
+            closeModal();
+        }
+
+        function showTaskDetails(type, lecturer, link) {
+            const taskModal = document.getElementById("taskDetails");
+            taskModal.innerHTML = `
+                <h3>Event Details</h3>
+                <p><strong>Event Type:</strong> ${type}</p>
+                <p><strong>Lecturer/Host:</strong> ${lecturer}</p>
+                <p><strong>Event Link:</strong> <a href="${link}" target="_blank">${link}</a></p>`;
+            document.getElementById("taskModal").style.display = "flex";
+        }
+
+        function changeMonth(offset) {
+            currentMonth += offset;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            } else if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            updateCalendar();
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains("modal")) closeModal();
+        }
+
+        updateCalendar();
+    </script>
+</body>
+</html>
