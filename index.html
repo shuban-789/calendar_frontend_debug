@@ -335,6 +335,26 @@
             if (event.target.classList.contains("modal")) closeModal();
         }
 
+        async function saveEvent(eventData) {
+            try {
+                const response = await fetch("http://localhost:8080/api/events/add", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(eventData)
+                });
+                
+                if (response.ok) {
+                    console.log("Event saved successfully");
+                } else {
+                    console.error("Failed to save event");
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
         updateCalendar();
     </script>
 </body>
