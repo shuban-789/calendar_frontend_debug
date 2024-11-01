@@ -33,7 +33,7 @@ func (rw *responseWriter) WriteHeader(code int) {
 
 func main() {
     fs := http.FileServer(http.Dir("."))
-    http.Handle("/", loggingMiddleware(fs))
+    http.Handle("/calendar", loggingMiddleware(fs))
 
     log.Println("Serving on http://localhost:3000 🟢")
     err := http.ListenAndServe(":3000", nil)
