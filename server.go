@@ -31,11 +31,14 @@ func (rw *responseWriter) WriteHeader(code int) {
     rw.ResponseWriter.WriteHeader(code)
 }
 
-func main() {
-    fs := http.FileServer(http.Dir("."))
-    http.Handle("/calendar", loggingMiddleware(fs))
+func serveCalendarHTML(w http.ResponseWriter, r *http.Request) {
+    http.ServeFile(w, r, "calendar.html")
+}
 
-    log.Println("Serving on http://localhost:3000 🟢")
+func main() {
+    http.Handle("/calendar", loggingMiddleware(http.HandlerFunc(serveCalendarHTML)))
+
+    log.Println("Serving on http://localhost:3000/calendar 🟢")
     err := http.ListenAndServe(":3000", nil)
     if err != nil {
         log.Fatal(err)
