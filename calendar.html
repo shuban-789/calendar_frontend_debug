@@ -222,14 +222,14 @@
     <div class="modal" id="eventModal">
         <div class="modal-content">
             <h3>Add Event</h3>
-            <label for="eventType">Event Type</label>
-            <select id="eventType">
+            <label for="type">Event Type</label>
+            <select id="type">
                 <option value="Lecture">Lecture</option>
                 <option value="Meeting">Meeting</option>
                 <option value="Workshop">Workshop</option>
             </select>
-            <label for="lecturerName">Lecturer/Host Name</label>
-            <input type="text" id="lecturerName" placeholder="Enter name">
+            <label for="lecturer">Lecturer/Host Name</label>
+            <input type="text" id="lecturer" placeholder="Enter name">
             <label for="eventLink">Event Link</label>
             <input type="url" id="eventLink" placeholder="Enter link">
             <button onclick="saveEvent()">Save Event</button>
@@ -296,14 +296,14 @@
         }
 
         function saveEvent() {
-            const eventType = document.getElementById("eventType").value;
-            const lecturerName = document.getElementById("lecturerName").value;
+            const type = document.getElementById("type").value;
+            const lecturer = document.getElementById("lecturer").value;
             const eventLink = document.getElementById("eventLink").value;
 
             const eventSquare = document.createElement("div");
             eventSquare.classList.add("event-square");
             eventSquare.textContent = selectedDay.children.length;
-            eventSquare.onclick = (e) => showTaskDetails(eventType, lecturerName, eventLink);
+            eventSquare.onclick = (e) => showTaskDetails(type, lecturer, eventLink);
             
             selectedDay.appendChild(eventSquare);
             closeModal();
@@ -337,7 +337,7 @@
 
         async function saveEvent(eventData) {
             try {
-                const response = await fetch("http://localhost:8080/api/events/add", {
+                const response = await fetch("http://localhost:8085/api/events/add", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
