@@ -222,17 +222,17 @@
     <div class="modal" id="eventModal">
         <div class="modal-content">
             <h3>Add Event</h3>
-            <label for="type">Event Type</label>
-            <select id="type">
+            <label for="eventType">Event Type</label>
+            <select id="eventType">
                 <option value="Lecture">Lecture</option>
                 <option value="Meeting">Meeting</option>
                 <option value="Workshop">Workshop</option>
             </select>
-            <label for="lecturer">Lecturer/Host Name</label>
-            <input type="text" id="lecturer" placeholder="Enter name">
+            <label for="lecturerName">Lecturer/Host Name</label>
+            <input type="text" id="lecturerName" placeholder="Enter name">
             <label for="eventLink">Event Link</label>
             <input type="url" id="eventLink" placeholder="Enter link">
-            <button onclick="saveEvent()">Save Event</button>
+            <button type="submit" id="saveEventBtn">Save Event</button>
         </div>
     </div>
 
@@ -252,6 +252,18 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         let selectedDay;
+
+        document.getElementById("saveEventBtn").addEventListener("click", () => {
+            const day = selectedDay.children[0].textContent;
+            const formattedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            saveEvent({
+                type: document.getElementById("eventType").value,
+                lecturer: document.getElementById("lecturerName").value,
+                eventLink: document.getElementById("eventLink").value,
+                date: formattedDate
+            });
+        });
 
         function updateCalendar() {
             const monthYearElement = document.getElementById("monthYear");
@@ -296,14 +308,14 @@
         }
 
         function saveEvent() {
-            const type = document.getElementById("type").value;
-            const lecturer = document.getElementById("lecturer").value;
+            const eventType = document.getElementById("eventType").value;
+            const lecturerName = document.getElementById("lecturerName").value;
             const eventLink = document.getElementById("eventLink").value;
 
             const eventSquare = document.createElement("div");
             eventSquare.classList.add("event-square");
             eventSquare.textContent = selectedDay.children.length;
-            eventSquare.onclick = (e) => showTaskDetails(type, lecturer, eventLink);
+            eventSquare.onclick = (e) => showTaskDetails(eventType, lecturerName, eventLink);
             
             selectedDay.appendChild(eventSquare);
             closeModal();
